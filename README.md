@@ -1,1 +1,1 @@
-# skipulag.is
+# skipulag.iss
