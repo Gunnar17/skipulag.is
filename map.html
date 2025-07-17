@@ -1,56 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Iceland Major Cities Map</title>
+  <title>Iceland Municipalities</title>
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-sA+NCD39ligRbHu/A1KlaMzXb0agt3gb0gaK3kPZafc="
-    crossorigin=""
   />
   <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-    }
-    #map {
-      height: 100%;
+    /* map takes full height minus bottom bar (100px) */
+    #map { 
+      height: calc(100vh - 100px);
       width: 100%;
+    }
+
+    /* bottom bar */
+    .bottom-bar {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 100px;
+      background: white;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      box-shadow: 0 -2px 6px rgba(0,0,0,0.2);
+      z-index: 1000;
+    }
+
+    /* dropdown */
+    #municipality-select {
+      font-size: 1.5em;
+      padding: 8px;
+    }
+
+    /* region filter buttons */
+    .region-buttons {
+      margin-left: 30px;
+    }
+    .region-buttons button {
+      margin-right: 12px;
+      padding: 8px 14px;
+      font-size: 1.2em;
+      border: none;
+      border-radius: 4px;
+      background: #eee;
+      cursor: pointer;
+    }
+    .region-buttons button.active,
+    .region-buttons button:hover {
+      background: #ddd;
     }
   </style>
 </head>
 <body>
+
   <div id="map"></div>
 
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-GZC3KHUhxoCJjVxGGC7ckl8n7DGQG6zjUjaZKhNChCk="
-    crossorigin=""
-  ></script>
+  <div class="bottom-bar">
+    <select id="municipality-select">
+      <option value="">Select a municipality…</option>
+    </select>
+    <div class="region-buttons">
+      <button data-region="All">All</button>
+      <button data-region="South Iceland">South Iceland</button>
+      <button data-region="Western Iceland">Western Iceland</button>
+      <button data-region="Northern Iceland">Northern Iceland</button>
+      <button data-region="Eastern Iceland">Eastern Iceland</button>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    const map = L.map('map').setView([64.9631, -19.0208], 6);
+    // 1) Define Iceland’s bounding box & init map
+    const icelandBounds = [[63.2, -25.0], [66.5, -13.0]];
+    const map = L.map('map', {
+      center: [64.9631, -19.0208],
+      zoom: 6,
+      maxBounds: icelandBounds,
+      maxBoundsViscosity: 1.0
+    });
+    L.tileLayer(
+      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      { attribution: '© OpenStreetMap contributors' }
+    ).addTo(map);
+    map.fitBounds(icelandBounds);
+    map.options.minZoom = map.getZoom();
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 13,
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
-
-    const cities = [
-      { name: 'Reykjavík', coords: [64.1466, -21.9426] },
-      { name: 'Akureyri', coords: [65.6885, -18.1262] },
-      { name: 'Keflavík', coords: [63.9995, -22.5560] },
-      { name: 'Selfoss', coords: [63.9333, -21.0000] },
-      { name: 'Egilsstaðir', coords: [65.2671, -14.3948] },
-      { name: 'Ísafjörður', coords: [66.0758, -23.1280] },
-      { name: 'Höfn', coords: [64.2539, -15.2139] }
+    // 2) Municipalities with region
+    const municipalities = [
+      { name: "Reykjavík",     coords: [64.1466, -21.9426], region: "Western Iceland" },
+      { name: "Kópavogur",     coords: [64.0895, -21.8954], region: "Western Iceland" },
+      { name: "Hafnarfjörður", coords: [64.0675, -21.9372], region: "Western Iceland" },
+      { name: "Akranes",       coords: [64.2983, -22.0760], region: "Western Iceland" },
+      { name: "Selfoss",       coords: [63.9339, -20.9971], region: "South Iceland" },
+      { name: "Vestmannaeyjar",coords: [63.4357, -20.2731], region: "South Iceland" },
+      { name: "Vík í Mýrdal",  coords: [63.4175, -19.0067], region: "South Iceland" },
+      { name: "Akureyri",      coords: [65.6885, -18.1262], region: "Northern Iceland" },
+      { name: "Sauðárkrókur",  coords: [65.7464, -19.6351], region: "Northern Iceland" },
+      { name: "Húsavík",       coords: [66.0447, -17.3385], region: "Northern Iceland" },
+      { name: "Egilsstaðir",   coords: [65.2666, -14.3948], region: "Eastern Iceland" },
+      { name: "Neskaupstaður", coords: [65.1500, -13.7144], region: "Eastern Iceland" },
+      { name: "Seyðisfjörður", coords: [65.2573, -14.0082], region: "Eastern Iceland" }
+      // …add the rest here…
     ];
 
-    cities.forEach(city => {
-      L.marker(city.coords)
+    // 3) Optional markers with direct click transport
+    municipalities.forEach(m => {
+      const url = `municipality.html?` +
+                  `name=${encodeURIComponent(m.name)}` +
+                  `&lat=${m.coords[0]}&lng=${m.coords[1]}`;
+      L.marker(m.coords)
         .addTo(map)
-        .bindPopup(`<strong>${city.name}</strong>`);
+        .on('click', () => { window.location.href = url; });
+    });
+
+    // 4) Populate dropdown
+    const select = document.getElementById('municipality-select');
+    function populateSelect(list) {
+      select.innerHTML = '<option value="">Select a municipality…</option>';
+      list.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = `${m.name}|${m.coords[0]}|${m.coords[1]}`;
+        opt.text = m.name;
+        select.appendChild(opt);
+      });
+    }
+    populateSelect(municipalities);
+
+    // 5) Dropdown change handler
+    select.addEventListener('change', e => {
+      if (!e.target.value) return;
+      const [name, lat, lng] = e.target.value.split('|');
+      window.location.href =
+        `municipality.html?name=${encodeURIComponent(name)}` +
+        `&lat=${lat}&lng=${lng}`;
+    });
+
+    // 6) Region filter buttons
+    const regionButtons = document.querySelectorAll('.region-buttons button');
+    regionButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        regionButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const region = btn.dataset.region;
+        if (region === 'All') {
+          populateSelect(municipalities);
+        } else {
+          populateSelect(municipalities.filter(m => m.region === region));
+        }
+      });
     });
   </script>
 </body>
