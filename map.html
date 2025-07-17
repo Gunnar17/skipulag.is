@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Iceland Major Cities Map</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-sA+NCD39ligRbHu/A1KlaMzXb0agt3gb0gaK3kPZafc="
+    crossorigin=""
+  />
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+    #map {
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-GZC3KHUhxoCJjVxGGC7ckl8n7DGQG6zjUjaZKhNChCk="
+    crossorigin=""
+  ></script>
+  <script>
+    const map = L.map('map').setView([64.9631, -19.0208], 6);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 13,
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    const cities = [
+      { name: 'Reykjavík', coords: [64.1466, -21.9426] },
+      { name: 'Akureyri', coords: [65.6885, -18.1262] },
+      { name: 'Keflavík', coords: [63.9995, -22.5560] },
+      { name: 'Selfoss', coords: [63.9333, -21.0000] },
+      { name: 'Egilsstaðir', coords: [65.2671, -14.3948] },
+      { name: 'Ísafjörður', coords: [66.0758, -23.1280] },
+      { name: 'Höfn', coords: [64.2539, -15.2139] }
+    ];
+
+    cities.forEach(city => {
+      L.marker(city.coords)
+        .addTo(map)
+        .bindPopup(`<strong>${city.name}</strong>`);
+    });
+  </script>
+</body>
+</html>
