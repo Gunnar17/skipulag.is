@@ -3,61 +3,206 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Municipality View</title>
+  <title>Municipality View – Documents & Feedback</title>
+  
+  <!-- Leaflet CSS -->
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   />
-  <style>
-    html, body { margin:0; padding:0; height:100%; }
-    #map { height:100%; width:100%; }
 
-.back-btn {
-  position: absolute;
-  top: 10px; left: 10px;
-  background: white;
-  padding: 14px 18px;     /* larger clickable area */
-  font-size: 2em;         /* bigger text */
-  font-weight: bold;      /* more emphasis */
-  box-shadow: 0 0 8px rgba(0,0,0,0.4);
-  border-radius: 4px;     /* subtle rounding */
-  cursor: pointer;
-  z-index: 1000;
-}
-    .leaflet-popup-content {
-      font-size: 1.5em;
+  <style>
+    html, body { margin:0; padding:0; font-family: Arial, sans-serif; }
+    #map { height: 40vh; width: 100%; }
+    .back-btn {
+      position:absolute; top:10px; left:10px;
+      background:white; padding:10px 14px;
+      font-size:2em; font-weight:bold;
+      box-shadow:0 0 8px rgba(0,0,0,0.4);
+      border-radius:4px; cursor:pointer; z-index:1000;
     }
-    .leaflet-popup-content-wrapper {
-      padding: 12px 16px;
+    main {
+      padding: 16px;
+      max-width: 800px;
+      margin: 0 auto 40px;
     }
+    h2 { margin-top: 1.5em; color: #005f73; }
+
+    /* Documents */
+    #docs-list { list-style: none; padding:0; }
+    #docs-list li {
+      margin: 0.5em 0;
+      font-size: 1.1em;
+    }
+
+    /* Upload form */
+    #upload-form {
+      margin-top: 0.5em;
+      padding: 12px;
+      background: #edf6f9;
+      border-radius: 4px;
+    }
+    #upload-form input[type="text"],
+    #upload-form input[type="file"] {
+      font-size: 1em;
+      width: 100%;
+      margin-bottom: 8px;
+      padding: 8px;
+    }
+    #upload-form button {
+      padding: 10px 16px;
+      font-size: 1em;
+      background: #0a9396;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #upload-form button:disabled {
+      background: #94d2bd;
+      cursor: not-allowed;
+    }
+
+    /* Feedback form */
+    #send-feedback {
+      padding: 10px 20px;
+      font-size: 1.3em;
+      background: #0a9396;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 1em 0;
+    }
+    .content { display: none; }
+    form label { display: block; margin-top: 12px; font-size: 1.2em; }
+    form input, form textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      font-size: 1em;
+    }
+    .btn-submit {
+      margin-top: 16px;
+      padding: 12px 24px;
+      font-size: 1em;
+      background: #0a9396;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn-submit:hover { background: #005f73; }
   </style>
 </head>
 <body>
   <div id="map"></div>
-  <div class="back-btn" onclick="history.back()">← Back</div>
+  <button class="back-btn" onclick="history.back()">←</button>
 
+  <main>
+    <h1 id="muni-name">Loading…</h1>
+
+
+<h2>Verkefni</h2>
+<button id="btn-new-project" class="btn">Stofna verkefni</button>
+
+<table id="projects-table">
+  <thead>
+    <tr>
+      <th>Nafn</th>
+      <th>Staðsetning</th>
+      <th>Framvinda</th>
+      <th>Staða</th>
+    </tr>
+  </thead>
+  <tbody>
+
+    <h2>Kostnaður</h2>
+<ul id="cost-list"></ul>
+<form id="cost-form">
+  <input id="cost-desc" placeholder="Lýsing" required />
+  <input id="cost-amount" type="number" placeholder="Kostnaður" required />
+  <button>Áskrá kostnað</button>
+</form>
+
+<label>Framvinda: <span id="progress-label">0%</span></label>
+<input type="range" id="progress-range" min="0" max="100" value="0" />
+<button id="btn-update-progress">Uppfæra</button>
+
+
+
+   
+    <!-- Phase 3: Documents -->
+    <h2>Documents</h2>
+    <ul id="docs-list">
+      <li>Loading documents…</li>
+    </ul>
+    <div id="upload-form">
+      <h3>Upload Document</h3>
+      <input type="text" id="doc-title" placeholder="Document title" required />
+      <input type="file" id="doc-file" />
+      <button id="btn-upload" disabled>Upload</button>
+    </div>
+
+    <!-- Phase 2: Feedback -->
+    <button id="send-feedback">Send Feedback</button>
+    <section class="content">
+      <h2>Send Feedback</h2>
+      <form id="consultation-form">
+        <label for="name">Your Name</label>
+        <input type="text" id="name" required />
+        <label for="email">Email</label>
+        <input type="email" id="email" required />
+        <label for="comment">Comment</label>
+        <textarea id="comment" rows="5" required></textarea>
+        <button type="submit" class="btn-submit">Submit Feedback</button>
+      </form>
+    </section>
+  </main>
+
+  <!-- Firebase + Leaflet Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
   <script>
-    // 1) Enlarge default markers here too
-    L.Icon.Default.mergeOptions({
-      iconSize:   [50, 82],
-      iconAnchor: [25, 82],
-      popupAnchor:[0, -76],
-      shadowSize: [68, 95],
-      shadowAnchor: [22, 94]
-    });
+    // ——— Firebase Initialization ———
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      projectId: "YOUR_PROJECT",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "...",
+      appId: "..."
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth    = firebase.auth();
+    const db      = firebase.firestore();
+    const storage = firebase.storage();
 
-    // 2) Read URL params
-    const params = new URLSearchParams(window.location.search);
-    const name  = params.get('name');
-    const lat   = parseFloat(params.get('lat'));
-    const lng   = parseFloat(params.get('lng'));
-    if (!name || isNaN(lat) || isNaN(lng)) {
-      document.body.innerHTML = '<p style="padding:20px; font-size:1.5em;">Invalid data.</p>';
-      throw new Error('Missing params');
-    }
+    // ——— UI Elements ———
+    const uploadForm     = document.getElementById('upload-form');
+    const feedbackBtn    = document.getElementById('send-feedback');
+    const contentSection = document.querySelector('section.content');
+    const docsList       = document.getElementById('docs-list');
+    const titleInput     = document.getElementById('doc-title');
+    const fileInput      = document.getElementById('doc-file');
+    const uploadBtn      = document.getElementById('btn-upload');
+    const selectName     = document.getElementById('muni-name');
 
-    // 3) Init map centered on that muni
+    // Hide protected UI initially
+    uploadForm.style.display = 'none';
+    feedbackBtn.style.display = 'none';
+
+    // ——— Read URL params & initialize map ———
+    const params    = new URLSearchParams(window.location.search);
+    const nameParam = params.get('name');
+    const lat       = parseFloat(params.get('lat'));
+    const lng       = parseFloat(params.get('lng'));
+    selectName.innerText = nameParam;
+
     const map = L.map('map', {
       center: [lat, lng],
       zoom: 12,
@@ -68,12 +213,156 @@
       'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       { attribution: '© OpenStreetMap contributors' }
     ).addTo(map);
-
-    // 4) Marker + popup
-    L.marker([lat, lng])
+    const marker = L.marker([lat, lng])
       .addTo(map)
-      .bindPopup(`<b>${name}</b>`)
-      .openPopup();
+      .bindPopup(nameParam);
+    marker.on('click', () => {
+      map.setView([lat, lng], 12);
+      marker.openPopup();
+    });
+
+    // ——— Phase 4: Role‐based UI ———
+    auth.onAuthStateChanged(async user => {
+      if (!user) {
+        // not signed in: allow feedback (or redirect if you prefer)
+        feedbackBtn.style.display = 'block';
+        uploadForm.style.display = 'none';
+        return;
+      }
+      feedbackBtn.style.display = 'block';
+      // fetch user role
+      const doc = await db.collection('users').doc(user.uid).get();
+      const role = doc.exists ? doc.data().role : 'public';
+      // only staff/planner/admin can upload
+      if (['staff','planner','admin'].includes(role)) {
+        uploadForm.style.display = 'block';
+      }
+    });
+
+    // ——— Phase 3: Load & display documents ———
+    async function loadDocs() {
+      docsList.innerHTML = '<li>Loading documents…</li>';
+      const snapshot = await db.collection('documents')
+        .where('municipality', '==', nameParam)
+        .orderBy('uploadedAt','desc')
+        .get();
+
+      if (snapshot.empty) {
+        docsList.innerHTML = '<li>No documents uploaded yet.</li>';
+        return;
+      }
+      docsList.innerHTML = '';
+      snapshot.forEach(d => {
+        const data = d.data();
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <a href="${data.downloadURL}" target="_blank">
+            ${data.title}
+          </a>
+          <small> (uploaded ${data.uploadedAt.toDate().toLocaleString()})</small>
+        `;
+        docsList.appendChild(li);
+      });
+    }
+    loadDocs();
+
+    // ——— Phase 3: Document upload logic ———
+    function updateUploadState() {
+      uploadBtn.disabled = !titleInput.value || !fileInput.files.length;
+    }
+    titleInput.addEventListener('input', updateUploadState);
+    fileInput.addEventListener('change', updateUploadState);
+
+    uploadBtn.addEventListener('click', async () => {
+      const title = titleInput.value.trim();
+      const file  = fileInput.files[0];
+      if (!title || !file) return;
+
+      uploadBtn.disabled   = true;
+      uploadBtn.textContent = 'Uploading…';
+
+      const path = `${nameParam}/${Date.now()}_${file.name}`;
+      const snap = await storage.ref(path).put(file);
+      const url  = await snap.ref.getDownloadURL();
+
+      await db.collection('documents').add({
+        municipality: nameParam,
+        title,
+        storagePath: path,
+        downloadURL: url,
+        uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      titleInput.value = '';
+      fileInput.value  = '';
+      uploadBtn.textContent = 'Upload';
+      updateUploadState();
+      await loadDocs();
+    });
+
+    // ——— Phase 2: Feedback form logic ———
+    feedbackBtn.addEventListener('click', () => {
+      if (!auth.currentUser) {
+        return window.location.href = 'login.html';
+      }
+      contentSection.style.display = 'block';
+      feedbackBtn.style.display = 'none';
+    });
+
+    document.getElementById('consultation-form')
+      .addEventListener('submit', async e => {
+        e.preventDefault();
+        await db.collection('consultations').add({
+          municipality: nameParam,
+          name:    document.getElementById('name').value,
+          email:   document.getElementById('email').value,
+          comment: document.getElementById('comment').value,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        alert('Thank you! Your feedback has been submitted.');
+        e.target.reset();
+      });
+
+      db.collection('projects')
+  .add({ title, municipality: nameParam, location, status:'áætlun', progress:0, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      async function loadProjects() {
+  const snap = await db.collection('projects')
+    .where('municipality','==',nameParam)
+    .orderBy('createdAt','desc')
+    .get();
+  const tbody = document.querySelector('#projects-table tbody');
+  tbody.innerHTML = '';
+  snap.forEach(doc => {
+    const p = doc.data();
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${p.title}</td>
+      <td><a href="#" onclick="zoomTo(${p.location.lat},${p.location.lng})">Sjá</a></td>
+      <td>
+        <progress value="${p.progress}" max="100"></progress>
+        ${p.progress}%
+      </td>
+      <td>${p.status}</td>
+      <td>
+        <button onclick="editProject('${doc.id}')">Halda áfram</button>
+        <button onclick="viewProject('${doc.id}')">Upplýsingar</button>
+      </td>`;
+    tbody.appendChild(tr);
+
+    // líka set pin á kort:
+    L.marker([p.location.lat,p.location.lng], { icon: projectIcon })
+      .addTo(map)
+      .bindPopup(`<b>${p.title}</b><br>${p.status} (${p.progress}%)`);
+  });
+}
+
+document.getElementById('btn-update-progress').onclick = async () => {
+  const newProg = parseInt(document.getElementById('progress-range').value);
+  await db.collection('projects').doc(projectId).update({ progress:newProg, updatedAt:firebase.firestore.FieldValue.serverTimestamp() });
+  // og skrifa í projectUpdates safnið
+  await db.collection('projectUpdates').add({ projectId, user:auth.currentUser.uid, newProgress:newProg, timestamp:firebase.firestore.FieldValue.serverTimestamp() });
+};
+
   </script>
 </body>
 </html>

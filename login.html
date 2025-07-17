@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Skipulag.is – Login</title>
+  <style>body{font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;}
+         #login-container{width:320px;padding:24px;border:1px solid #ccc;border-radius:8px;}</style>
+</head>
+<body>
+  <div id="login-container">
+    <h2>Login / Sign Up</h2>
+    <input id="email"  type="email"  placeholder="Email" style="width:100%; padding:8px; margin-bottom:8px;">
+    <input id="pass"   type="password" placeholder="Password" style="width:100%; padding:8px; margin-bottom:12px;">
+    <button id="btn-signin" style="width:100%; padding:10px;">Login</button>
+    <button id="btn-signup" style="width:100%; padding:10px; margin-top:8px;">Sign Up</button>
+    <p id="msg" style="color:red; font-size:0.9em;"></p>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  <script>
+    // — Firebase init (same config as other pages)
+    const firebaseConfig = { /* … */ };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db   = firebase.firestore();
+
+    // Sign In
+    document.getElementById('btn-signin').onclick = () => {
+      const email = document.getElementById('email').value;
+      const pass  = document.getElementById('pass').value;
+      auth.signInWithEmailAndPassword(email, pass)
+        .then(() => window.location.href = 'index.html')
+        .catch(e => document.getElementById('msg').innerText = e.message);
+    };
+
+    // Sign Up (creates a “public” user by default)
+    document.getElementById('btn-signup').onclick = () => {
+      const email = document.getElementById('email').value;
+      const pass  = document.getElementById('pass').value;
+      auth.createUserWithEmailAndPassword(email, pass)
+        .then(cred => {
+          return db.collection('users').doc(cred.user.uid).set({ role: 'public' });
+        })
+        .then(() => window.location.href = 'index.html')
+        .catch(e => document.getElementById('msg').innerText = e.message);
+    };
+  </script>
+</body>
+</html>

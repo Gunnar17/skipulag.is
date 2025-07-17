@@ -9,8 +9,22 @@
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   />
   <style>
-    /* map takes full height minus bottom bar (100px) */
-    #map { 
+   
+    header {
+      background: #333;
+      color: white;
+      padding: 1em;
+      font-size: 1.5em;
+    }
+    header a {
+      color: #0af;
+      text-decoration: none;
+      margin-left: 1em;
+      font-weight: bold;
+    }
+
+   /* map takes full height minus bottom bar (100px) */
+   #map { 
       height: calc(100vh - 100px);
       width: 100%;
     }
@@ -55,6 +69,9 @@
   </style>
 </head>
 <body>
+  <header>
+    Skipulag.is
+    <a href="index.html">Home</a>
 
   <div id="map"></div>
 
@@ -152,6 +169,8 @@
         }
       });
     });
+
+    
   </script>
 </body>
 </html>
